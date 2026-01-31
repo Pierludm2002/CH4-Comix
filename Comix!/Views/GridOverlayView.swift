@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct GridOverlayView: View {
-    // Puoi cambiare questi valori per modificare la griglia
-    var step: CGFloat = 40 // Grandezza dei quadrati
-    var color: Color = .gray.opacity(0.3) // Colore delle linee
-    var lineWidth: CGFloat = 1 // Spessore delle linee
+    // You can change these values to modify the grid
+    var step: CGFloat = 40 // Square size
+    var color: Color = .gray.opacity(0.3) // Line color
+    var lineWidth: CGFloat = 1 // Line thickness
 
     var body: some View {
         GeometryReader { geometry in
@@ -19,28 +19,28 @@ struct GridOverlayView: View {
                 let width = geometry.size.width
                 let height = geometry.size.height
 
-                // --- Linee Verticali ---
-                // "stride" crea un ciclo da 0 alla larghezza saltando di 'step' (40)
+                // --- Vertical Lines ---
+                // "stride" creates a loop from 0 to width skipping by 'step' (40)
                 for x in stride(from: 0, to: width, by: step) {
                     path.move(to: CGPoint(x: x, y: 0))
                     path.addLine(to: CGPoint(x: x, y: height))
                 }
 
-                // --- Linee Orizzontali ---
+                // --- Horizontal Lines ---
                 for y in stride(from: 0, to: height, by: step) {
                     path.move(to: CGPoint(x: 0, y: y))
                     path.addLine(to: CGPoint(x: width, y: y))
                 }
             }
-            .stroke(color, lineWidth: lineWidth) // Applica colore e spessore al tracciato
+            .stroke(color, lineWidth: lineWidth) // Apply color and thickness to the path
         }
-        // Questo permette ai tocchi di "passare attraverso" la griglia
-        // così puoi disegnare sul canvas che sta sotto (o sopra)
+        // This allows touches to "pass through" the grid
+        // so you can draw on the canvas below (or above)
         .allowsHitTesting(false)
     }
 }
 
-// Anteprima per vedere come appare mentre programmi
+// Preview to see how it looks while coding
 #Preview {
     ZStack {
         Color.white

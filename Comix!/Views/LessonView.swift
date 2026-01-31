@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+/*
 struct LessonView: View {
     let lesson: Lesson
     private let drawingStore = DrawingStore()
@@ -36,6 +36,6 @@ struct LessonView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
+*/
 // Nota: la nuova ExerciseViewFactory è già definita in HomeView.swift.
 // Non ridichiararla qui per evitare "Invalid redeclaration".

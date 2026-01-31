@@ -4,7 +4,6 @@
 //
 //  Created by Antonio Bonetti on 26/01/26.
 //
-
 import SwiftUI
 import PencilKit
 import Combine
@@ -14,27 +13,31 @@ final class LessonSessionViewModel: ObservableObject {
     @Published var stepIndex: Int = 0
     @Published var drawing: PKDrawing = PKDrawing()
 
-    let lesson: Lesson
+    // NOW USING THE CHAPTER DIRECTLY
+    let chapter: Chapter
 
     private let drawingStore: DrawingStore
     private let progressStore: ProgressStore
+    
+    private var isFinished: Bool = false
 
-    init(lesson: Lesson, drawingStore: DrawingStore, progressStore: ProgressStore) {
-        self.lesson = lesson
+    // Updated Init
+    init(chapter: Chapter, drawingStore: DrawingStore, progressStore: ProgressStore) {
+        self.chapter = chapter
         self.drawingStore = drawingStore
         self.progressStore = progressStore
         load()
     }
     
-
     var currentStep: LessonStep {
-        guard !lesson.steps.isEmpty else {
-            return LessonStep(id: "empty", instruction: "Nessuno step disponibile.", overlayImageName: nil, showGrid: false)
+        guard !chapter.steps.isEmpty else {
+            return LessonStep(id: "empty", instruction: "No step available.", overlayImageName: nil, showGrid: false)
         }
-        return lesson.steps[min(stepIndex, lesson.steps.count - 1)]
+        // Using chapter.steps
+        return chapter.steps[min(stepIndex, chapter.steps.count - 1)]
     }
 
-    var canGoNext: Bool { stepIndex < max(lesson.steps.count - 1, 0) }
+    var canGoNext: Bool { stepIndex < max(chapter.steps.count - 1, 0) }
     var canGoBack: Bool { stepIndex > 0 }
 
     func nextStep() {
@@ -50,31 +53,38 @@ final class LessonSessionViewModel: ObservableObject {
     }
 
     func finishLesson() {
-        progressStore.setCompleted(true, for: lesson.id)
+        isFinished = true
+        progressStore.setCompleted(true, for: chapter.id)
         saveProgress()
     }
 
-    func saveProgress() {
-        drawingStore.save(drawing: drawing, for: lesson.id)
-        progressStore.saveStepIndex(stepIndex, for: lesson.id)
-    }
 
+    func saveProgress() {
+        // If finished, reset progress to 0 for next time, otherwise save current step
+        let indexToSave = isFinished ? 0 : stepIndex
+        progressStore.saveStepIndex(indexToSave, for: chapter.id)
+        
+        let currentDrawing = self.drawing // Capture current value
+        let chapterId = self.chapter.id
+        
+        Task {
+            await drawingStore.save(drawing: currentDrawing, for: chapterId)
+        }
+    }
     func load() {
-        stepIndex = progressStore.loadStepIndex(for: lesson.id)
-        if let loaded = drawingStore.load(for: lesson.id) {
+        stepIndex = progressStore.loadStepIndex(for: chapter.id)
+        if let loaded = drawingStore.load(for: chapter.id) {
             drawing = loaded
         }
     }
 
     func resetDrawing() {
         drawing = PKDrawing()
-        drawingStore.delete(for: lesson.id)
-        // Se vuoi cancellare davvero, NON richiamare subito saveProgress (altrimenti risalvi il disegno vuoto)
-        progressStore.saveStepIndex(stepIndex, for: lesson.id)
+        drawingStore.delete(for: chapter.id)
+        progressStore.saveStepIndex(stepIndex, for: chapter.id)
     }
 
     var isCompleted: Bool {
-        progressStore.isCompleted(exerciseId: lesson.id)
+        progressStore.isCompleted(exerciseId: chapter.id)
     }
 }
-
